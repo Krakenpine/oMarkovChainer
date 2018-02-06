@@ -11,7 +11,6 @@ About the sentence length. The program tries to end the sentence after the lengt
 
 One could also wonder why words that cannot be at the end of a sentence are in the list of ending words. Maybe the source text has them like that or the sentence splitter just fails sometimes. The splitter is ugly and clunky anyway, a better one would be fine improvement.
 
-Interstingly, prosessing the words and sentences isn't the slowest part, finding out what words should be capitalized is. The program looks for words that are capitalized and are in the middle of a sentence to find out names and whatnot. Problem is, that sometimes other words than names are capitalized in texts for reasons unknown to mortals (ok, some reasons are clear, like "Little People" in some popular fantasy book) and that would make them capitalized every time they are used even though they probably shouldn't be. This is solved for checking if the word is in the text as capitalized and non-capitalized versions, and if it is, it is removed from the list of capitalized words. The implementation of this where the program checks for them is quite slow as there can be thousands of words in both of the lists. Maybe there exists some Pythonic magic to make that kind of thing quicker.
 
 Usage:
 omarkov.py A B C D E <sentence length> <number of sentences> <split by rows : 0, split by sentences : 1> <optional>
