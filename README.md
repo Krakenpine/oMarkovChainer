@@ -13,7 +13,7 @@ One could also wonder why words that cannot be at the end of a sentence are in t
 
 
 Usage:
-omarkov.py A B C D E <sentence length> <number of sentences> <split by rows : 0, split by sentences : 1> <optional>
+omarkov.py A B C D E
   
 A = file
 
