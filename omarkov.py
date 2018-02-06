@@ -155,14 +155,30 @@ sys.stdout.write("Checking capitalization  ")
 sys.stdout.flush()
 millis = int(round(time.time() * 1000))
 
+listOfCapitalizedWords.sort()
+listOfUnCapitalizedWords.sort()
+capitalizationCounter = 0
+capitalizedAlphabets = {}
+unCapitalizedAlphabets = {}
+# this could be done simpler, but this is about 15 times faster
 for x in listOfCapitalizedWords:
-	progressCounter += 1
-	if progressCounter == progressCounterMax:
-		sys.stdout.write(".")
-		sys.stdout.flush()
-		progressCounter = 0
-	if x not in listOfUnCapitalizedWords:
-		tempList.append(x)
+	if x[0] not in capitalizedAlphabets.keys():
+		capitalizedAlphabets[x[0]] = []
+	capitalizedAlphabets[x[0]].append(x)
+for x in listOfUnCapitalizedWords:
+	if x[0] not in unCapitalizedAlphabets.keys():
+		unCapitalizedAlphabets[x[0]] = []
+	unCapitalizedAlphabets[x[0]].append(x)	
+	
+for x in capitalizedAlphabets.keys():
+	for y in capitalizedAlphabets[x]:
+		progressCounter += 1
+		if progressCounter == progressCounterMax:
+			sys.stdout.write(".")
+			sys.stdout.flush()
+			progressCounter = 0
+		if y not in unCapitalizedAlphabets[x]:
+			tempList.append(y)
 listOfCapitalizedWords = tempList
 listOfCapitalizedWords.append("i")		# Lone I should always be capitalized, but probably the text file has uncapitalized single i somewhere, so...
 print(" There is " + str(len(listOfCapitalizedWords)) + " capitalized words and prosessing them took " + str(int(round(time.time() * 1000)) - millis) + " ms")
