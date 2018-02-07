@@ -42,7 +42,7 @@ if len(sys.argv) == 2:				# Yeah, the parameter doesn't need to be "usage" for i
 	print("B = target length of sentences")
 	print("C = number of sentences to generate")
 	print("D = split file by rows: 0, split file by sentences: 1")
-	print("E = optional, N: remove numbers, A: read file as ANSI, L: make sentences at least long as length, C: Capital letters only in the beginning of sentence, R: try to make sentences rhyme, ,: remove commas")
+	print("E = optional, N: remove numbers, A: read file as ANSI, L: make sentences at least long as length, C: Capital letters only in the beginning of sentence, R: try to make sentences rhyme, ,: remove commas, S: try really to make pairs of sentences the same length")
 	print("Example: omarkov.py lotr.txt 8 5 1 NA")
 	sys.exit()
 
@@ -60,6 +60,7 @@ removeCommas = False
 ensureLength = False
 dontCapitalize = False
 tryToRhyme = False
+makeSentencesSameLength = False
 fileEncoding = "utf-8"
 if len(sys.argv) == 6:
 	if "N" in sys.argv[5]:
@@ -74,6 +75,8 @@ if len(sys.argv) == 6:
 		tryToRhyme = True
 	if "," in sys.argv[5]:
 		removeCommas = True
+	if "S" in sys.argv[5]:
+		makeSentencesSameLength = True
 
 with open(file, "r", encoding=fileEncoding) as f:
 	listOfLines = f.readlines()
@@ -255,6 +258,8 @@ riimitys = ""
 secondToLastWord = ""
 everySecondTime = True
 giveUpRhyming = 0
+previousLength = 0
+canPrint = True
 while sentences > 0:
 	numberOfWords = 0
 	output = ""
@@ -309,27 +314,43 @@ while sentences > 0:
 					output += "."
 			else:
 				output += "."
-
+		
 		output = output[:1].upper() + output[1:]
-		if tryToRhyme:
-			if riimitys:
-				if riimitys == output[-4] + output[-3] + output[-2] and (word != secondToLastWord or giveUpRhyming > 1000):
-					print(output)
-					sentences -= 1
-					riimitys = ""
-					giveUpRhyming = 0
-				elif riimitys[1] + riimitys[2] == output[-3] + output[-2] and word != secondToLastWord and giveUpRhyming > 500:
-					print(output)
-					sentences -= 1
-					riimitys = ""
-					giveUpRhyming = 0
+		
+
+		if makeSentencesSameLength:
+			if previousLength != 0:
+				if len(output) > 0.8*previousLength and len(output) < 1.2*previousLength:
+					canPrint = True
 				else:
-					giveUpRhyming += 1
+					canPrint = False
 			else:
-				riimitys = output[-4] + output[-3] + output[-2]
-				secondToLastWord = word
+				previousLength = len(output)
+		
+		if canPrint:
+			if tryToRhyme:
+				if riimitys:
+					if riimitys == output[-4] + output[-3] + output[-2] and (word != secondToLastWord or giveUpRhyming > 1000):
+						print(output)
+						previousOutput = 0
+						sentences -= 1
+						riimitys = ""
+						giveUpRhyming = 0
+					elif riimitys[1] + riimitys[2] == output[-3] + output[-2] and word != secondToLastWord and giveUpRhyming > 500:
+						print(output)
+						previousOutput = 0
+						sentences -= 1
+						riimitys = ""
+						giveUpRhyming = 0
+					else:
+						giveUpRhyming += 1
+				else:
+					riimitys = output[-4] + output[-3] + output[-2]
+					secondToLastWord = word
+					print(output)
+					previousOutput = 0
+					sentences -= 1
+			else:
 				print(output)
+				previousOutput = 0
 				sentences -= 1
-		else:
-			print(output)
-			sentences -= 1
