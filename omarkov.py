@@ -42,7 +42,7 @@ if len(sys.argv) == 2:				# Yeah, the parameter doesn't need to be "usage" for i
 	print("B = target length of sentences")
 	print("C = number of sentences to generate")
 	print("D = split file by rows: 0, split file by sentences: 1")
-	print("E = optional, N: remove numbers, A: read file as ANSI")
+	print("E = optional, N: remove numbers, A: read file as ANSI, L: make sentences at least long as length, C: Capital letters only in the beginning of sentence, R: try to make sentences rhyme, ,: remove commas")
 	print("Example: omarkov.py lotr.txt 8 5 1 NA")
 	sys.exit()
 
@@ -56,13 +56,24 @@ length = int(sys.argv[2])
 sentences = int(sys.argv[3])
 method = int(sys.argv[4])
 removeNumbers = False
+removeCommas = False
+ensureLength = False
+dontCapitalize = False
+tryToRhyme = False
 fileEncoding = "utf-8"
 if len(sys.argv) == 6:
 	if "N" in sys.argv[5]:
 		removeNumbers = True
 	if "A" in sys.argv[5]:
 		fileEncoding = "ANSI"
-
+	if "L" in sys.argv[5]:
+		ensureLength = True
+	if "C" in sys.argv[5]:
+		dontCapitalize = True
+	if "R" in sys.argv[5]:
+		tryToRhyme = True
+	if "," in sys.argv[5]:
+		removeCommas = True
 
 with open(file, "r", encoding=fileEncoding) as f:
 	listOfLines = f.readlines()
@@ -76,6 +87,15 @@ if removeNumbers:
 		tempList.append(temp)
 	listOfLines = tempList
 
+if removeCommas:
+	print("Removing commas")
+	tempList = []
+	temp = ""
+	for x in listOfLines:
+		temp = "".join(i for i in x if not i == ",")
+		tempList.append(temp)
+	listOfLines = tempList
+	
 if method == 1:
 	temp = " ".join(listOfLines).rstrip().replace("  ", " ")
 	listOfLinesFixed = [temp]
@@ -137,6 +157,8 @@ for e in listOfLinesFixed:
 				for count in range(1, len(z)):
 					if z[count][0].isupper():
 						listOfCapitalizedWords.append(z[count].lower())
+					else:
+						listOfUnCapitalizedWords.append(z2[count].lower())
 
 if method == 1:						
 	print(" There was " + str(len(vara)) + " sentences and processing them took " + str(int(round(time.time() * 1000)) - millis) + " ms")
@@ -148,43 +170,48 @@ endingWords = list(filter(None, list(set(endingWords))))
 listOfCapitalizedWords = list(set(listOfCapitalizedWords))
 listOfUnCapitalizedWords = list(set(listOfUnCapitalizedWords))
 tempList = []
-progressCounterMax = int(len(listOfCapitalizedWords) / 10)
-progressCounter = 0
 
-sys.stdout.write("Checking capitalization  ")
-sys.stdout.flush()
-millis = int(round(time.time() * 1000))
-
-listOfCapitalizedWords.sort()
-listOfUnCapitalizedWords.sort()
-capitalizationCounter = 0
-capitalizedAlphabets = {}
-unCapitalizedAlphabets = {}
 # this could be done simpler, but this is about 15 times faster
-for x in listOfCapitalizedWords:
-	if x[0] not in capitalizedAlphabets.keys():
-		capitalizedAlphabets[x[0]] = []
-	capitalizedAlphabets[x[0]].append(x)
-for x in listOfUnCapitalizedWords:
-	if x[0] not in unCapitalizedAlphabets.keys():
-		unCapitalizedAlphabets[x[0]] = []
-	unCapitalizedAlphabets[x[0]].append(x)	
-	
-for x in capitalizedAlphabets.keys():
-	for y in capitalizedAlphabets[x]:
-		progressCounter += 1
-		if progressCounter == progressCounterMax:
-			sys.stdout.write(".")
-			sys.stdout.flush()
-			progressCounter = 0
-		if x in unCapitalizedAlphabets.keys():
-			if y not in unCapitalizedAlphabets[x]:
+if dontCapitalize:
+	listOfCapitalizedWords = []
+else:
+	progressCounterMax = int(len(listOfCapitalizedWords) / 10)
+	progressCounter = 0
+
+	sys.stdout.write("Checking capitalization  ")
+	sys.stdout.flush()
+	millis = int(round(time.time() * 1000))
+
+	listOfCapitalizedWords.sort()
+	listOfUnCapitalizedWords.sort()
+	capitalizationCounter = 0
+	capitalizedAlphabets = {}
+	unCapitalizedAlphabets = {}
+
+	for x in listOfCapitalizedWords:
+		if x[0] not in capitalizedAlphabets.keys():
+			capitalizedAlphabets[x[0]] = []
+		capitalizedAlphabets[x[0]].append(x)
+	for x in listOfUnCapitalizedWords:
+		if x[0] not in unCapitalizedAlphabets.keys():
+			unCapitalizedAlphabets[x[0]] = []
+		unCapitalizedAlphabets[x[0]].append(x)	
+
+	for x in capitalizedAlphabets.keys():
+		for y in capitalizedAlphabets[x]:
+			progressCounter += 1
+			if progressCounter == progressCounterMax:
+				sys.stdout.write(".")
+				sys.stdout.flush()
+				progressCounter = 0
+			if x in unCapitalizedAlphabets.keys():
+				if y not in unCapitalizedAlphabets[x]:
+					tempList.append(y)
+			else:
 				tempList.append(y)
-		else:
-			tempList.append(y)
-listOfCapitalizedWords = tempList
-listOfCapitalizedWords.append("i")		# Lone I should always be capitalized, but probably the text file has uncapitalized single i somewhere, so...
-print(" There is " + str(len(listOfCapitalizedWords)) + " capitalized words and prosessing them took " + str(int(round(time.time() * 1000)) - millis) + " ms")
+	listOfCapitalizedWords = tempList
+	listOfCapitalizedWords.append("i")		# Lone I should always be capitalized, but probably the text file has uncapitalized single i somewhere, so...
+	print(" There is " + str(len(listOfCapitalizedWords)) + " capitalized words and prosessing them took " + str(int(round(time.time() * 1000)) - millis) + " ms")
 
 mainlist = {}
 progressCounterMax = int(len(listOfLines2) / 10)
@@ -224,8 +251,12 @@ for e in mainlist.keys():
 	mainlist2[e] = x2
 
 listOfWordsSentenceCannotEndWith = ["the", "a", "of", "but", "with"]
-
+riimitys = ""
+secondToLastWord = ""
+everySecondTime = True
+giveUpRhyming = 0
 while sentences > 0:
+	numberOfWords = 0
 	output = ""
 	word = beginningWords[random.randrange(len(beginningWords))]
 	counter = length
@@ -235,8 +266,10 @@ while sentences > 0:
 			output = output[:-1]
 		if word in listOfCapitalizedWords:
 			output += word[:1].upper() + word[1:] + " "
+			numberOfWords += 1
 		else:
 			output += word + " "
+			numberOfWords += 1
 		if word not in listOfWordsSentenceCannotEndWith:
 			try:
 				if (counter < 0 and word in endingWords) or not mainlist2[word].keys():
@@ -257,15 +290,46 @@ while sentences > 0:
 			if float(x) > selectWord:
 				word = z[x]
 				break
-
-	output = output[:-1]
-	if output[-1] == ",":
+	skip = False
+	if ensureLength:
+		if numberOfWords < length:
+			output = 0
+			skip = True
+	if not skip:
 		output = output[:-1]
-	if output[-1] == "!" or output[-1] == "?":
-		output += " "
-	else:
-		output += ". "
+		if output[-1] == ",":
+			output = output[:-1]
+		if output[-1] == "!" or output[-1] == "?":
+			output += ""
+		else:
+			if tryToRhyme:
+				if not riimitys:
+					output += ","
+				else:
+					output += "."
+			else:
+				output += "."
 
-	output = output[:1].upper() + output[1:]
-	print(output)
-	sentences -= 1
+		output = output[:1].upper() + output[1:]
+		if tryToRhyme:
+			if riimitys:
+				if riimitys == output[-4] + output[-3] + output[-2] and (word != secondToLastWord or giveUpRhyming > 1000):
+					print(output)
+					sentences -= 1
+					riimitys = ""
+					giveUpRhyming = 0
+				elif riimitys[1] + riimitys[2] == output[-3] + output[-2] and word != secondToLastWord and giveUpRhyming > 500:
+					print(output)
+					sentences -= 1
+					riimitys = ""
+					giveUpRhyming = 0
+				else:
+					giveUpRhyming += 1
+			else:
+				riimitys = output[-4] + output[-3] + output[-2]
+				secondToLastWord = word
+				print(output)
+				sentences -= 1
+		else:
+			print(output)
+			sentences -= 1
