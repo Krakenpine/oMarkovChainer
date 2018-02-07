@@ -57,7 +57,7 @@ sentences = int(sys.argv[3])
 method = int(sys.argv[4])
 removeNumbers = False
 fileEncoding = "utf-8"
-if sys.argv[5]:
+if len(sys.argv) == 6:
 	if "N" in sys.argv[5]:
 		removeNumbers = True
 	if "A" in sys.argv[5]:
