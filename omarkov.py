@@ -177,7 +177,10 @@ for x in capitalizedAlphabets.keys():
 			sys.stdout.write(".")
 			sys.stdout.flush()
 			progressCounter = 0
-		if y not in unCapitalizedAlphabets[x]:
+		if x in unCapitalizedAlphabets.keys():
+			if y not in unCapitalizedAlphabets[x]:
+				tempList.append(y)
+		else:
 			tempList.append(y)
 listOfCapitalizedWords = tempList
 listOfCapitalizedWords.append("i")		# Lone I should always be capitalized, but probably the text file has uncapitalized single i somewhere, so...
